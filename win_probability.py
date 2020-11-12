@@ -5,12 +5,14 @@ import pandas as pd
 import requests
 import json
 
+# What school are you analyzing?
+school = "Virginia Tech"
 
 # Get data from the API
 df = pd.DataFrame()
 for x in range(2013, 2020, 1):    # Line data is only available 2013+
     parameters = {
-        "team": "Virginia Tech",
+        "team": school,
         "year": x
     }
     response = requests.get("https://api.collegefootballdata.com/lines", params=parameters)
@@ -26,11 +28,6 @@ for x in range(2013, 2020, 1):    # Line data is only available 2013+
 
     df = df.append(temp)
 df = df[df.provider == 'consensus']
-school = "Virginia Tech"
-
-# explode the 4 line providers into their own rows
-#df = df.explode('lines')
-
 
 
 # Add Win/Loss columns
