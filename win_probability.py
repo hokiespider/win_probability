@@ -81,3 +81,13 @@ coaches = df.groupby(['Coach'])['wins', 'losses', 'Expected Wins'].sum().round(2
 coaches['win_perc'] = coaches.apply(lambda x: x['wins'] / (x['wins'] + x['losses']), axis=1).round(2)
 coaches['wins vs expectation'] = coaches['wins'] - coaches['Expected Wins'].round(2)
 coaches
+
+years = df.groupby(['season', 'spread_group'])['wins', 'losses', 'Expected Wins'].sum().round(2)
+years['win_perc'] = years.apply(lambda x: x['wins'] / (x['wins'] + x['losses']), axis=1).round(2)
+years['wins vs expectation'] = years['wins'] - years['Expected Wins'].round(2)
+years.reset_index()
+years = years.drop(['wins', 'losses', 'Expected Wins', 'win_perc'], axis=1)
+years = years.unstack('spread_group')
+years
+
+years.to_clipboard()
