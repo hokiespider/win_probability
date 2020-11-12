@@ -28,7 +28,7 @@ for x in range(2013, 2020, 1):    # Line data is only available 2013+
 
     df = df.append(temp)
 df = df[df.provider == 'consensus']
-
+df['spread'] = df.spread.astype('float')
 
 # Add Win/Loss columns
 home_games = df[df.homeTeam == school].copy()
@@ -42,8 +42,42 @@ away_games['score_diff'] = away_games['awayScore'] - away_games['homeScore']
 away_games['home_away'] = "away"
 away_games.loc[away_games['score_diff'] > 0, 'wins'] = 1
 away_games.loc[away_games['score_diff'] < 0, 'losses'] = 1
+away_games['spread'] = away_games['spread'] * -1
 
-df2 = home_games.append(away_games)
+df = home_games.append(away_games)
 
-records = df2.groupby(['season'])['wins', 'losses'].sum()
-records
+#records = df.groupby(['season'])['wins', 'losses'].sum()
+
+# Import the odds of winning
+filename = '/Users/appleuser/Documents/win_probability/odds_of_winning_lines.csv'
+odds = pd.read_csv(filename)
+odds = odds.melt(id_vars='Spread', value_vars=['Favorite', 'Underdog'], var_name='Type', value_name="Expected Wins")
+odds.loc[odds['Spread'] == '20+', 'Spread'] = 20
+odds['Spread'] = odds.Spread.astype('float')
+
+odds.loc[odds['Type'] == "Favorite", 'Spread'] = odds['Spread'] * -1
+df.loc[df['spread'] >= 20, 'spread'] = 20
+df.loc[df['spread'] <= -20, 'spread'] = -20
+
+df = df.merge(odds, how='left', left_on='spread', right_on='Spread')
+
+df.loc[df['spread'] < 0, 'spread_group'] = '3. 0.5-6.5 Favorites'
+df.loc[df['spread'] < -6.5, 'spread_group'] = '2. 7-14 Favorites'
+df.loc[df['spread'] < -13.5, 'spread_group'] = ' 1. 14+ Favorites'
+df.loc[df['spread'] == 0, 'spread_group'] = '4. pick-em'
+df.loc[df['spread'] > 0, 'spread_group'] = '5. 0.5-6.5 Dogs'
+df.loc[df['spread'] > 6.5, 'spread_group'] = '6. 7-14 Dogs'
+df.loc[df['spread'] > 13.5, 'spread_group'] = '7. 14+ Dogs'
+df.loc[df['season'] >= 2016, 'Coach'] = 'Fuente 2016-2019'
+df.loc[df['season'] < 2016, 'Coach'] = 'Beamer 2013 - 2015'
+
+groups = df.groupby(['Coach', 'spread_group'])['wins', 'losses', 'Expected Wins'].sum().round(2)
+groups['win_perc'] = groups.apply(lambda x: x['wins'] / (x['wins'] + x['losses']), axis=1).round(2)
+groups['wins vs expectation'] = groups['wins'] - groups['Expected Wins'].round(2)
+groups
+groups.to_clipboard()
+
+coaches = df.groupby(['Coach'])['wins', 'losses', 'Expected Wins'].sum().round(2)
+coaches['win_perc'] = coaches.apply(lambda x: x['wins'] / (x['wins'] + x['losses']), axis=1).round(2)
+coaches['wins vs expectation'] = coaches['wins'] - coaches['Expected Wins'].round(2)
+coaches
