@@ -33,27 +33,20 @@ school = "Virginia Tech"
 
 
 
-# Add Win/Loss column
-
-df['score_diff'] = df['homeScore'] - df['awayScore']
-df.loc[]
-
-
-home_games = df[df.homeTeam == school]
+# Add Win/Loss columns
+home_games = df[df.homeTeam == school].copy()
 home_games['score_diff'] = home_games['homeScore'] - home_games['awayScore']
 home_games['home_away'] = "Home"
 home_games.loc[home_games['score_diff'] > 0, 'wins'] = 1
 home_games.loc[home_games['score_diff'] < 0, 'losses'] = 1
 
-away_games = df.query('awayTeam == @school')
+away_games = df[df.awayTeam == school].copy()
 away_games['score_diff'] = away_games['awayScore'] - away_games['homeScore']
 away_games['home_away'] = "away"
-away_games.sample()
 away_games.loc[away_games['score_diff'] > 0, 'wins'] = 1
-
 away_games.loc[away_games['score_diff'] < 0, 'losses'] = 1
 
 df2 = home_games.append(away_games)
 
-records = df.groupby(['season'])['wins', 'losses'].sum()
+records = df2.groupby(['season'])['wins', 'losses'].sum()
 records
